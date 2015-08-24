@@ -123,20 +123,20 @@ func NewAuthnRequest() *AuthnRequest {
 			Url:  "", // caller must populate ar.AppSettings.Issuer
 			SAML: "urn:oasis:names:tc:SAML:2.0:assertion",
 		},
-		IssueInstant: time.Now().UTC().Format(time.RFC3339Nano),
+		IssueInstant: time.Now().UTC().Format(time.RFC3339),
 		NameIDPolicy: NameIDPolicy{
 			XMLName: xml.Name{
 				Local: "samlp:NameIDPolicy",
 			},
 			AllowCreate: true,
-			Format:      "urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
+			Format:      "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
 		},
 		RequestedAuthnContext: RequestedAuthnContext{
 			XMLName: xml.Name{
 				Local: "samlp:RequestedAuthnContext",
 			},
 			SAMLP:      "urn:oasis:names:tc:SAML:2.0:protocol",
-			Comparison: "exact",
+			Comparison: "minimum",
 			AuthnContextClassRef: AuthnContextClassRef{
 				XMLName: xml.Name{
 					Local: "saml:AuthnContextClassRef",
@@ -175,11 +175,19 @@ func NewAuthnRequest() *AuthnRequest {
 						XMLName: xml.Name{
 							Local: "samlsig:Transforms",
 						},
-						Transform: Transform{
-							XMLName: xml.Name{
-								Local: "samlsig:Transform",
+						Transform: []Transform{
+							Transform{
+								XMLName: xml.Name{
+									Local: "samlsig:Transform",
+								},
+								Algorithm: "http://www.w3.org/2000/09/xmldsig#enveloped-signature",
 							},
-							Algorithm: "http://www.w3.org/2000/09/xmldsig#enveloped-signature",
+							Transform{
+								XMLName: xml.Name{
+									Local: "samlsig:Transform",
+								},
+								Algorithm: "http://www.w3.org/2001/10/xml-exc-c14n#",
+							},
 						},
 					},
 					DigestMethod: DigestMethod{

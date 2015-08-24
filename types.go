@@ -12,12 +12,12 @@ type AuthnRequest struct {
 	ProtocolBinding                string                `xml:"ProtocolBinding,attr"`
 	AssertionConsumerServiceURL    string                `xml:"AssertionConsumerServiceURL,attr"`
 	IssueInstant                   string                `xml:"IssueInstant,attr"`
-	AssertionConsumerServiceIndex  int                   `xml:"AssertionConsumerServiceIndex,attr"`
+	AssertionConsumerServiceIndex  int                   `xml:"AssertionConsumerServiceIndex,attr,omitempty"`
 	AttributeConsumingServiceIndex int                   `xml:"AttributeConsumingServiceIndex,attr"`
 	Issuer                         Issuer                `xml:"Issuer"`
-	NameIDPolicy                   NameIDPolicy          `xml:"NameIDPolicy"`
-	RequestedAuthnContext          RequestedAuthnContext `xml:"RequestedAuthnContext"`
 	Signature                      Signature             `xml:"Signature,omitempty"`
+	NameIDPolicy                   NameIDPolicy          `xml:"NameIDPolicy"`
+	RequestedAuthnContext          RequestedAuthnContext `xml:"-"` // ``xml:"RequestedAuthnContext"`
 	originalString                 string
 }
 
@@ -96,7 +96,7 @@ type X509Data struct {
 
 type Transforms struct {
 	XMLName   xml.Name
-	Transform Transform
+	Transform []Transform
 }
 
 type DigestMethod struct {

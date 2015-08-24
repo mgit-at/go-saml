@@ -140,11 +140,19 @@ func NewSignedResponse() *Response {
 						XMLName: xml.Name{
 							Local: "samlsig:Transforms",
 						},
-						Transform: Transform{
-							XMLName: xml.Name{
-								Local: "samlsig:Transform",
+						Transform: []Transform{
+							Transform{
+								XMLName: xml.Name{
+									Local: "samlsig:Transform",
+								},
+								Algorithm: "http://www.w3.org/2000/09/xmldsig#enveloped-signature",
 							},
-							Algorithm: "http://www.w3.org/2000/09/xmldsig#enveloped-signature",
+							Transform{
+								XMLName: xml.Name{
+									Local: "samlsig:Transform",
+								},
+								Algorithm: "http://www.w3.org/2001/10/xml-exc-c14n#",
+							},
 						},
 					},
 					DigestMethod: DigestMethod{
