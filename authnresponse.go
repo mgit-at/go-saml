@@ -28,6 +28,31 @@ func ParseCompressedEncodedResponse(b64ResponseXML string) (*Response, error) {
 
 }
 
+func (r *Response) Decrypt(s *ServiceProviderSettings) error {
+	doc, err := decrypt(r.originalString, s.PrivateKeyPath, xmlResponseID)
+	if err != nil {
+		return err
+	}
+
+	*r = Response{}
+	err = xml.Unmarshal([]byte(doc), r)
+	if err != nil {
+		return err
+	}
+	if r.EncryptedAssertion.Assertion.ID != "" {
+		r.Assertion = r.EncryptedAssertion.Assertion
+		r.Signature = r.EncryptedAssertion.Assertion.Signature
+		r.encrypted = true
+	}
+
+	r.originalString = doc
+	return nil
+}
+
+func (r *Response) XML() string {
+	return r.originalString
+}
+
 func ParseEncodedResponse(b64ResponseXML string) (*Response, error) {
 	response := Response{}
 	bytesXML, err := base64.StdEncoding.DecodeString(b64ResponseXML)
@@ -75,7 +100,12 @@ func (r *Response) Validate(s *ServiceProviderSettings) error {
 		return errors.New("subject recipient mismatch, expected: " + s.AssertionConsumerServiceURL + " not " + r.Assertion.Subject.SubjectConfirmation.SubjectConfirmationData.Recipient)
 	}
 
-	err := VerifyResponseSignature(r.originalString, s.IDPPublicCertPath)
+	var err error
+	if r.encrypted {
+		err = VerifyAssertionSignature(r.originalString, s.IDPPublicCertPath)
+	} else {
+		err = VerifyResponseSignature(r.originalString, s.IDPPublicCertPath)
+	}
 	if err != nil {
 		return err
 	}
@@ -321,4 +351,8 @@ func (r *Response) GetAttribute(name string) string {
 		}
 	}
 	return ""
+}
+
+func (r *Response) GetNameID() string {
+	return r.Assertion.Subject.NameID.Value
 }

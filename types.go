@@ -8,12 +8,13 @@ type AuthnRequest struct {
 	SAML                           string                `xml:"xmlns:saml,attr"`
 	SAMLSIG                        string                `xml:"xmlns:samlsig,attr"`
 	ID                             string                `xml:"ID,attr"`
+	Destination                    string                `xml:"Destination,attr"`
 	Version                        string                `xml:"Version,attr"`
 	ProtocolBinding                string                `xml:"ProtocolBinding,attr"`
 	AssertionConsumerServiceURL    string                `xml:"AssertionConsumerServiceURL,attr"`
 	IssueInstant                   string                `xml:"IssueInstant,attr"`
 	AssertionConsumerServiceIndex  int                   `xml:"AssertionConsumerServiceIndex,attr,omitempty"`
-	AttributeConsumingServiceIndex int                   `xml:"AttributeConsumingServiceIndex,attr"`
+	AttributeConsumingServiceIndex int                   `xml:"AttributeConsumingServiceIndex,attr,omitempty"`
 	Issuer                         Issuer                `xml:"Issuer"`
 	Signature                      Signature             `xml:"Signature,omitempty"`
 	NameIDPolicy                   NameIDPolicy          `xml:"NameIDPolicy"`
@@ -186,26 +187,35 @@ type Response struct {
 	IssueInstant string `xml:"IssueInstant,attr"`
 	InResponseTo string `xml:"InResponseTo,attr"`
 
-	Assertion Assertion `xml:"Assertion"`
-	Signature Signature `xml:"Signature"`
-	Issuer    Issuer    `xml:"Issuer"`
-	Status    Status    `xml:"Status"`
+	Assertion          Assertion          `xml:"Assertion"`
+	EncryptedAssertion EncryptedAssertion `xml:"EncryptedAssertion"`
+	Signature          Signature          `xml:"Signature"`
+	Issuer             Issuer             `xml:"Issuer"`
+	Status             Status             `xml:"Status"`
 
 	originalString string
+	encrypted      bool
 }
 
 type Assertion struct {
-	XMLName            xml.Name
-	ID                 string `xml:"ID,attr"`
-	Version            string `xml:"Version,attr"`
-	XS                 string `xml:"xmlns:xs,attr"`
-	XSI                string `xml:"xmlns:xsi,attr"`
-	SAML               string `xml:"saml,attr"`
-	IssueInstant       string `xml:"IssueInstant,attr"`
-	Issuer             Issuer `xml:"Issuer"`
+	XMLName      xml.Name
+	ID           string    `xml:"ID,attr"`
+	Version      string    `xml:"Version,attr"`
+	XS           string    `xml:"xmlns:xs,attr"`
+	XSI          string    `xml:"xmlns:xsi,attr"`
+	SAML         string    `xml:"saml,attr"`
+	IssueInstant string    `xml:"IssueInstant,attr"`
+	Issuer       Issuer    `xml:"Issuer"`
+	Signature    Signature `xml:"Signature"`
+
 	Subject            Subject
 	Conditions         Conditions
 	AttributeStatement AttributeStatement
+}
+
+type EncryptedAssertion struct {
+	XMLName   xml.Name
+	Assertion Assertion `xml:"Assertion"`
 }
 
 type Conditions struct {

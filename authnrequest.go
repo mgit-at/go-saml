@@ -41,7 +41,6 @@ func ParseCompressedEncodedRequest(b64RequestXML string) (*AuthnRequest, error) 
 	// marshal and unmarshaled so we'll keep the original string around for validation.
 	authnRequest.originalString = string(bXML)
 	return &authnRequest, nil
-
 }
 
 func ParseEncodedRequest(b64RequestXML string) (*AuthnRequest, error) {
@@ -85,6 +84,7 @@ func (s *ServiceProviderSettings) GetAuthnRequest() *AuthnRequest {
 	r := NewAuthnRequest()
 	r.AssertionConsumerServiceURL = s.AssertionConsumerServiceURL
 	r.Issuer.Url = s.IDPSSODescriptorURL
+	r.Destination = s.IDPSSOURL
 	r.Signature.KeyInfo.X509Data.X509Certificate.Cert = s.PublicCert()
 
 	return r
@@ -129,7 +129,7 @@ func NewAuthnRequest() *AuthnRequest {
 				Local: "samlp:NameIDPolicy",
 			},
 			AllowCreate: true,
-			Format:      "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
+			Format:      "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
 		},
 		RequestedAuthnContext: RequestedAuthnContext{
 			XMLName: xml.Name{
@@ -164,7 +164,7 @@ func NewAuthnRequest() *AuthnRequest {
 					XMLName: xml.Name{
 						Local: "samlsig:SignatureMethod",
 					},
-					Algorithm: "http://www.w3.org/2000/09/xmldsig#rsa-sha1",
+					Algorithm: "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
 				},
 				SamlsigReference: SamlsigReference{
 					XMLName: xml.Name{
@@ -194,7 +194,7 @@ func NewAuthnRequest() *AuthnRequest {
 						XMLName: xml.Name{
 							Local: "samlsig:DigestMethod",
 						},
-						Algorithm: "http://www.w3.org/2000/09/xmldsig#sha1",
+						Algorithm: "http://www.w3.org/2001/04/xmlenc#sha256",
 					},
 					DigestValue: DigestValue{
 						XMLName: xml.Name{

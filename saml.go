@@ -11,12 +11,14 @@ type ServiceProviderSettings struct {
 	IDPSSOURL                   string
 	IDPSSODescriptorURL         string
 	IDPPublicCertPath           string
+	IDPPublicCertEncPath        string
 	AssertionConsumerServiceURL string
 
-	hasInit       bool
-	publicCert    string
-	privateKey    string
-	iDPPublicCert string
+	hasInit          bool
+	publicCert       string
+	privateKey       string
+	iDPPublicCert    string
+	iDPPublicCertEnc string
 }
 
 type IdentityProviderSettings struct {
@@ -43,6 +45,11 @@ func (s *ServiceProviderSettings) Init() (err error) {
 		panic(err)
 	}
 
+	s.iDPPublicCertEnc, err = util.LoadCertificate(s.IDPPublicCertEncPath)
+	if err != nil {
+		panic(err)
+	}
+
 	return nil
 }
 
@@ -58,6 +65,13 @@ func (s *ServiceProviderSettings) PrivateKey() string {
 		panic("Must call ServiceProviderSettings.Init() first")
 	}
 	return s.privateKey
+}
+
+func (s *ServiceProviderSettings) IDPPublicCertEnc() string {
+	if !s.hasInit {
+		panic("Must call ServiceProviderSettings.Init() first")
+	}
+	return s.iDPPublicCertEnc
 }
 
 func (s *ServiceProviderSettings) IDPPublicCert() string {

@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	xmlResponseID = "urn:oasis:names:tc:SAML:2.0:protocol:Response"
-	xmlRequestID  = "urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest"
+	xmlResponseID  = "urn:oasis:names:tc:SAML:2.0:protocol:Response"
+	xmlRequestID   = "urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest"
+	xmlAssertionID = "urn:oasis:names:tc:SAML:2.0:assertion:Assertion"
 )
 
 // SignRequest sign a SAML 2.0 AuthnRequest
@@ -63,11 +64,48 @@ func sign(xml string, privateKeyPath string, id string) (string, error) {
 	return samlSignedRequestXML, nil
 }
 
+func decrypt(xml, privateKeyPath, id string) (string, error) {
+	samlXmlsecInput, err := ioutil.TempFile(os.TempDir(), "tmpgs")
+	if err != nil {
+		return "", err
+	}
+	defer deleteTempFile(samlXmlsecInput.Name())
+	samlXmlsecInput.WriteString("<?xml version='1.0' encoding='UTF-8'?>\n")
+	samlXmlsecInput.WriteString(xml)
+	samlXmlsecInput.Close()
+
+	samlXmlsecOutput, err := ioutil.TempFile(os.TempDir(), "tmpgs")
+	if err != nil {
+		return "", err
+	}
+	defer deleteTempFile(samlXmlsecOutput.Name())
+	samlXmlsecOutput.Close()
+
+	output, err := exec.Command("xmlsec1", "--decrypt",
+		"--privkey-pem", privateKeyPath,
+		"--id-attr:ID", id,
+		"--output", samlXmlsecOutput.Name(), samlXmlsecInput.Name()).CombinedOutput()
+	if err != nil {
+		return "", errors.New(err.Error() + " : " + string(output))
+	}
+
+	samlDecrypted, err := ioutil.ReadFile(samlXmlsecOutput.Name())
+	if err != nil {
+		return "", err
+	}
+	samlDecryptedXML := strings.Trim(string(samlDecrypted), "\n")
+	return samlDecryptedXML, nil
+}
+
 // VerifyResponseSignature verify signature of a SAML 2.0 Response document
 // `publicCertPath` must be a path on the filesystem, xmlsec1 is run out of process
 // through `exec`
 func VerifyResponseSignature(xml string, publicCertPath string) error {
 	return verify(xml, publicCertPath, xmlResponseID)
+}
+
+func VerifyAssertionSignature(xml string, publicCertPath string) error {
+	return verify(xml, publicCertPath, xmlAssertionID)
 }
 
 // VerifyRequestSignature verify signature of a SAML 2.0 AuthnRequest document
